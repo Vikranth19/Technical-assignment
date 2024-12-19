@@ -1,16 +1,27 @@
 package com.assignment.demo.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RestController
+@RequiredArgsConstructor
 @Log4j2
 public class ProcessController {
+
+    private final JedisPool jedisPool;
 
     @GetMapping(value = "/api/verve/accept", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> processIdRequest(
@@ -22,6 +33,12 @@ public class ProcessController {
         }
 
         ResponseEntity<String> response = ResponseEntity.ok("ok");
+
+        String redisKey = "unique-requests:" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd:HH-mm"));
+        try (Jedis jedis = jedisPool.getResource()) {
+            // Add the value to the set in Redis
+            jedis.sadd(redisKey, String.valueOf(id));
+        }
 
         if (endpoint != null && !endpoint.isEmpty()) {
             sendPostRequestAsync(endpoint);

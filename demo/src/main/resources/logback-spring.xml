@@ -1,0 +1,25 @@
+<configuration>
+    <!-- Console output -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File output -->
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>logs/count-logs.log</file>  <!-- Specify the file path here -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.assignment.demo.logger.RequestLogger" level="INFO">
+        <appender-ref ref="file"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="console" />
+    </root>
+
+</configuration>
