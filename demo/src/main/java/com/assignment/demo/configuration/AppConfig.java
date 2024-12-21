@@ -2,27 +2,28 @@ package com.assignment.demo.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
-import java.util.concurrent.Executor;
+import java.time.Duration;
+
 
 @Configuration
 public class AppConfig {
 
     @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate(); // Default RestTemplate bean
-    }
+    public WebClient webClient() {
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("custom")
+                .maxConnections(10000)
+                .pendingAcquireMaxCount(20000)
+                .build();
 
-    @Bean
-    public ThreadPoolTaskExecutor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(50);
-        executor.setQueueCapacity(500);
-        executor.setThreadNamePrefix("AsyncExecutor-");
-        executor.initialize();
-        return executor;
+        HttpClient httpClient = HttpClient.create(connectionProvider);
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
     }
 }
