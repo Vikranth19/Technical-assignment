@@ -1,5 +1,6 @@
 package com.assignment.demo.logger;
 
+import com.assignment.demo.service.KafkaMessagePublisher;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,8 @@ public class RequestLogger {
     @Qualifier("redisTemplate")
     private final RedisTemplate<String, String> redisTemplate;
 
+    private final KafkaMessagePublisher kafkaMessagePublisher;
+
     private static final Logger logger = LoggerFactory.getLogger(RequestLogger.class);
 
     @Scheduled(cron = "0 * * * * *") // Runs at the top of every minute
@@ -29,7 +32,9 @@ public class RequestLogger {
 
         if (uniqueCount != null) {
             redisTemplate.delete(currentMinuteKey);  // Synchronous delete
+            String message = "Unique requests received in the last minute " + prevMinuteWindow + " : " + uniqueCount;
             logger.info("Unique requests received in the last minute {}: {}", prevMinuteWindow, uniqueCount);
+            kafkaMessagePublisher.sendMessageToTopic(message);
         }
 
     }
